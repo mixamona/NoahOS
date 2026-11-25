@@ -1,0 +1,11 @@
+#!/bin/bash
+M="$HOME/.config/noahos-firstlogin.done"; [ -f "$M" ] && exit 0
+sleep 3
+W=/usr/share/backgrounds/noahos/noahos-aurora.png
+for m in Virtual-1 Virtual1 VGA-1 Virtual-0 HDMI-1 eDP-1 DP-1 Virtual-2 QXL-0; do
+  xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor$m/workspace0/last-image -n -t string -s "$W"
+  xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor$m/workspace0/image-style -n -t int -s 5
+done
+for p in $(xfconf-query -c xfce4-desktop -l | grep last-image); do xfconf-query -c xfce4-desktop -p "$p" -s "$W"; done
+notify-send "Welcome to NoahOS" "Made by Noah Gray — open NoahOS Settings to customize everything." 2>/dev/null
+touch "$M"

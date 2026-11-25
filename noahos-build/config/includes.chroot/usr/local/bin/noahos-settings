@@ -1,0 +1,92 @@
+#!/usr/bin/env python3
+# NoahOS Settings — made by Noah Gray
+import subprocess, gi
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk
+
+ACCENTS = {"Blue": "", "Purple": "-purple", "Pink": "-pink", "Red": "-red",
+           "Orange": "-orange", "Yellow": "-yellow", "Green": "-green", "Grey": "-grey"}
+WALLS = {"Aurora": "noahos-aurora", "Sunset": "noahos-sunset", "Midnight": "noahos-midnight", "Sky": "noahos-sky"}
+state = {"dark": True, "accent": ""}
+
+def sh(*a): subprocess.run(list(a), check=False)
+def xf(ch, p, t, v): sh("xfconf-query", "-c", ch, "-p", p, "-n", "-t", t, "-s", str(v))
+def dock(k, v): sh("dconf", "write", f"/net/launchpad/plank/docks/dock1/{k}", v)
+
+def apply_theme():
+    th = "WhitSur-" + ("Dark" if state["dark"] else "Light") + state["accent"]
+    ic = "WhitSur-dark" if state["dark"] else "WhitSur-light"
+    xf("xsettings", "/Net/ThemeName", "string", th)
+    xf("xsettings", "/Net/IconThemeName", "string", ic)
+    xf("xfwm4", "/general/theme", "string", th)
+    xf("xfce4-panel", "/panels/dark-mode", "bool", "true" if state["dark"] else "false")
+
+def set_wall(path):
+    out = subprocess.run(["xfconf-query", "-c", "xfce4-desktop", "-l"], capture_output=True, text=True).stdout.split()
+    for p in out:
+        if p.endswith("last-image"): sh("xfconf-query", "-c", "xfce4-desktop", "-p", p, "-s", path)
+
+def row(label, widget):
+    b = Gtk.Box(spacing=12); l = Gtk.Label(label=label, xalign=0); l.set_size_request(170, -1)
+    b.pack_start(l, False, False, 0); b.pack_start(widget, True, True, 0); return b
+
+def page():
+    b = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16); b.set_border_width(24); return b
+
+def title(t):
+    l = Gtk.Label(xalign=0); l.set_markup(f"<span size='x-large' weight='bold'>{t}</span>"); return l
+
+win = Gtk.Window(title="NoahOS Settings"); win.set_default_size(720, 460); win.connect("destroy", Gtk.main_quit)
+stack = Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE, transition_duration=250)
+side = Gtk.StackSidebar(stack=stack)
+box = Gtk.Box(); box.pack_start(side, False, False, 0); box.pack_start(stack, True, True, 0); win.add(box)
+
+p = page(); p.pack_start(title("Appearance"), False, False, 0)
+sw = Gtk.Switch(active=True, halign=Gtk.Align.START)
+sw.connect("notify::active", lambda s, _: (state.update(dark=s.get_active()), apply_theme()))
+p.pack_start(row("Dark mode", sw), False, False, 0)
+cb = Gtk.ComboBoxText()
+for n in ACCENTS: cb.append_text(n)
+cb.set_active(0); cb.connect("changed", lambda c: (state.update(accent=ACCENTS[c.get_active_text()]), apply_theme()))
+p.pack_start(row("Accent colour", cb), False, False, 0)
+fx = Gtk.Switch(active=True, halign=Gtk.Align.START)
+def fx_toggle(s, _):
+    if s.get_active(): sh("sh", "-c", "picom --config ~/.config/picom/picom.conf -b")
+    else: sh("pkill", "picom")
+fx.connect("notify::active", fx_toggle)
+p.pack_start(row("Blur, shadows & fades", fx), False, False, 0)
+stack.add_titled(p, "appearance", "Appearance")
+
+p = page(); p.pack_start(title("Dock"), False, False, 0)
+sz = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 24, 96, 1); sz.set_value(52)
+sz.connect("value-changed", lambda s: dock("icon-size", str(int(s.get_value()))))
+p.pack_start(row("Icon size", sz), False, False, 0)
+zm = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 100, 250, 5); zm.set_value(170)
+zm.connect("value-changed", lambda s: dock("zoom-percent", str(int(s.get_value()))))
+p.pack_start(row("Magnification", zm), False, False, 0)
+ze = Gtk.Switch(active=True, halign=Gtk.Align.START)
+ze.connect("notify::active", lambda s, _: dock("zoom-enabled", "true" if s.get_active() else "false"))
+p.pack_start(row("Zoom animation", ze), False, False, 0)
+pos = Gtk.ComboBoxText()
+for n in ("bottom", "left", "right", "top"): pos.append_text(n)
+pos.set_active(0); pos.connect("changed", lambda c: dock("position", f"'{c.get_active_text()}'"))
+p.pack_start(row("Position", pos), False, False, 0)
+ah = Gtk.Switch(active=True, halign=Gtk.Align.START)
+ah.connect("notify::active", lambda s, _: dock("hide-mode", "'window-dodge'" if s.get_active() else "'none'"))
+p.pack_start(row("Auto-hide", ah), False, False, 0)
+stack.add_titled(p, "dock", "Dock")
+
+p = page(); p.pack_start(title("Desktop & Wallpaper"), False, False, 0)
+wc = Gtk.ComboBoxText()
+for n in WALLS: wc.append_text(n)
+wc.set_active(0); wc.connect("changed", lambda c: set_wall(f"/usr/share/backgrounds/noahos/{WALLS[c.get_active_text()]}.png"))
+p.pack_start(row("Built-in wallpaper", wc), False, False, 0)
+fc = Gtk.FileChooserButton(title="Choose a wallpaper"); fc.connect("file-set", lambda f: set_wall(f.get_filename()))
+p.pack_start(row("Your own image", fc), False, False, 0)
+stack.add_titled(p, "desktop", "Desktop")
+
+p = page(); l = Gtk.Label(); l.set_justify(Gtk.Justification.CENTER)
+l.set_markup("<span size='xx-large' weight='bold'>NoahOS</span>\nVersion 1.0\n\n<b>Made by Noah Gray</b>\n\nLightweight Linux with a macOS-inspired desktop.\nSuper+Space = Spotlight · Super+T = Terminal · Super+E = Files")
+p.pack_start(l, True, True, 0); stack.add_titled(p, "about", "About NoahOS")
+
+win.show_all(); Gtk.main()

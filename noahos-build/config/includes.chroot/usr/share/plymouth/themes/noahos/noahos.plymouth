@@ -1,0 +1,7 @@
+[Plymouth Theme]
+Name=NoahOS
+Description=NoahOS boot splash - Made by Noah Gray
+ModuleName=script
+[script]
+ImageDir=/usr/share/plymouth/themes/noahos
+ScriptFile=/usr/share/plymouth/themes/noahos/noahos.script

@@ -1,0 +1,8 @@
+[net/launchpad/plank/docks/dock1]
+theme='Transparent'
+position='bottom'
+icon-size=52
+zoom-enabled=true
+zoom-percent=170
+hide-mode='window-dodge'
+alignment='center'

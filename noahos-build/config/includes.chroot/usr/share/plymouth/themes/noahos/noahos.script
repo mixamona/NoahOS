@@ -1,0 +1,17 @@
+Window.SetBackgroundTopColor(0.04, 0.05, 0.14);
+Window.SetBackgroundBottomColor(0.22, 0.12, 0.42);
+title = Image.Text("NoahOS", 1, 1, 1, 1, "Inter 56");
+ts = Sprite(title);
+ts.SetX(Window.GetWidth()/2 - title.GetWidth()/2);
+ts.SetY(Window.GetHeight()/2 - 70);
+sub = Image.Text("Made by Noah Gray", 1, 1, 1, 0.65, "Inter 16");
+ss = Sprite(sub);
+ss.SetX(Window.GetWidth()/2 - sub.GetWidth()/2);
+ss.SetY(Window.GetHeight()/2 + 10);
+t = 0;
+fun refresh() {
+  t++;
+  ts.SetOpacity(0.7 + 0.3 * (Math.Sin(t / 18) + 1) / 2);
+  ss.SetOpacity(0.4 + 0.3 * (Math.Sin(t / 18 + 1) + 1) / 2);
+}
+Plymouth.SetRefreshFunction(refresh);

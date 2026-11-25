@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=NoahOS Settings
+Comment=Customize NoahOS — made by Noah Gray
+Exec=noahos-settings
+Icon=preferences-system
+Categories=Settings;

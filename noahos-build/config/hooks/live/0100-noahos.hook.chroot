@@ -1,0 +1,24 @@
+#!/bin/bash
+set -e
+cd /tmp
+git clone --depth 1 https://github.com/vinceliuice/WhitSur-gtk-theme.git
+(cd WhitSur-gtk-theme && ./install.sh -d /usr/share/themes -t all)
+git clone --depth 1 https://github.com/vinceliuice/WhitSur-icon-theme.git
+(cd WhitSur-icon-theme && ./install.sh -d /usr/share/icons)
+git clone --depth 1 https://github.com/vinceliuice/WhitSur-cursors.git
+(cd WhitSur-cursors && ./install.sh)
+[ -d /root/.local/share/icons ] && cp -r /root/.local/share/icons/* /usr/share/icons/ || true
+rm -rf /tmp/WhitSur-*
+
+mkdir -p /usr/share/backgrounds/noahos; cd /usr/share/backgrounds/noahos
+convert -size 3840x2160 radial-gradient:'#7b6cff-#0a0f2e' noahos-aurora.png
+convert -size 3840x2160 radial-gradient:'#ff8a65-#2a1240' noahos-sunset.png
+convert -size 3840x2160 radial-gradient:'#25304f-#05060d' noahos-midnight.png
+convert -size 3840x2160 gradient:'#5ec8ff-#a98bff' noahos-sky.png
+
+sed -i 's/^PRETTY_NAME=.*/PRETTY_NAME="NoahOS 1.0 (made by Noah Gray)"/; s/^NAME=.*/NAME="NoahOS"/' /etc/os-release
+echo "NoahOS 1.0 — Made by Noah Gray" > /etc/issue
+echo "NoahOS 1.0 — Made by Noah Gray" > /etc/motd
+dconf update
+plymouth-set-default-theme noahos || true
+chmod +x /usr/local/bin/noahos-*
